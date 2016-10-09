@@ -118,6 +118,27 @@ void uart_init(u32 bound){
 }
 
 
+
+void USART1_Sendbyte(const char dat)
+{
+	USART_SendData(USART1, dat);         					//向串口1发送数据
+	while(USART_GetFlagStatus(USART1,USART_FLAG_TC)!=SET);	//等待发送结束
+}
+
+
+void USART1_Sendstr(const char* str)
+{
+	while(*str!='\0')
+	{
+		USART1_Sendbyte(*str);
+		str++;
+	}
+}
+
+
+
+
+
 void USART1_IRQHandler(void)                	//串口1中断服务程序
 {
 	u8 Res;

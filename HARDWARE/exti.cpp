@@ -18,7 +18,7 @@
 
 /****************************包含头文件*******************************************/
 #include "exti.h"
-//#include "Sensor.h"
+#include "Sensor.h"
 
 #if SYSTEM_SUPPORT_UCOS
 #include "os.h"					//ucos 使用	  
@@ -45,7 +45,7 @@ void EXTI1_IRQHandler(void)
 //	OS_ERR err;	
 	
 	OSIntEnter();    
-
+    sensor.Update();
 //	if(sensor.Update())
 //	{
 //		OSSemPost ((OS_SEM  *)&g_sem_sensor_rdy,
@@ -66,7 +66,7 @@ void EXTIX_Init(void)
 	
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);//使能SYSCFG时钟
 	
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource1);//PB1 连接到中断线2
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource1);//PB1 连接到中断线1
 	
 	/* 配置EXTI_Line1 */
 	EXTI_InitStructure.EXTI_Line = EXTI_Line1;

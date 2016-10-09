@@ -9,7 +9,7 @@
  * 从属关系	：
  * 库版本	：
  * 创建时间	：2016.9.28
- * 最后编辑	：2016.9.28
+ * 最后编辑	：2016.10.9
   **-------------------------------------------------------------------------------
 
  * 作	者	：Damm Stanger
@@ -41,6 +41,8 @@ void Sensor::MPU_AccTempGyro_Read(void)
 	gyro_raw[0]=(s16)tmp[4];
 	gyro_raw[1]=(s16)tmp[5];
 	gyro_raw[2]=(s16)tmp[6];
+	
+//	fsmc.ReadBuf32(MPU_TIMESP_L,tmp,2);
 	
 }
 
@@ -131,6 +133,16 @@ void Sensor::MPU_Mag_Read(void)
 	mag_raw[1]=(s16)tmp[1];
 	mag_raw[2]=(s16)tmp[2];
 }
+
+Vector3 Sensor::Get_RawMag(void)
+{
+	Vector3 res;
+	res[0]=(float)mag_raw[0];
+	res[1]=(float)mag_raw[1];
+	res[2]=(float)mag_raw[2];
+	return res; 
+	
+}
 	
 /*地磁矢量校准 % 椭球方程可写为：((X-X0)'*R')*(R *(X-X0)) = 1
 % 因此椭球点为：X_sphere = R *(X-X0);
@@ -181,7 +193,7 @@ void Sensor::ADNS_Read(void)
 {
 	u16 tmp[4];
 	fsmc.ReadBuf16(OPFL_MOTION,tmp,4);
-	optflw.motion = (bool)tmp[0]&0x80;			//哪一位有待查证
+	optflw.motion = (bool)(tmp[0]&0x80);			//哪一位有待查证
 	optflw.quality = (u8)tmp[1];
 	optflw.dx = (s8)tmp[2];
 	optflw.dy = (s8)tmp[3];

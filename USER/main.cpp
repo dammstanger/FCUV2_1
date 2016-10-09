@@ -34,7 +34,7 @@ int main(void)
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
 	
 	Driver_Init();
-//delay_ms(2000); 
+    
 	
 	INTX_DISABLE();		//关中断,防止滴答定时器对外设初始化的打扰
 	LED_Init();         //LED初始化

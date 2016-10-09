@@ -36,21 +36,21 @@ REG_STA :    bit4				 bit3				 bit2				bit1		 bit0
 #define ULTRS_RDY				0x10
 
 //====================读写16位的地址===================
-#define REG_CMD					150u
-#define REG_STA					151u				//
-#define REG_PWM1				152u
-#define REG_PWM2				153u
-#define REG_PWM3				154u
-#define REG_PWM4				155u
-#define REG_PWM5				156u
-#define REG_PWM6				157u
-#define REG_PWM7				158u
-#define REG_PWM8				159u
-#define OPFL_MOTION				160u
-#define OPFL_SQUARL				161u
-#define OPFL_DX					162u
-#define OPFL_DY					163u
-#define ALT_ULTRA				164u
+#define REG_CMD					0u
+#define REG_STA					1u				//
+#define REG_PWM1				2u
+#define REG_PWM2				3u
+#define REG_PWM3				4u
+#define REG_PWM4				5u
+#define REG_PWM5				6u
+#define REG_PWM6				7u
+#define REG_PWM7				8u
+#define REG_PWM8				9u
+#define OPFL_MOTION				10u
+#define OPFL_SQUARL				11u
+#define OPFL_DX					12u
+#define OPFL_DY					13u
+#define ALT_ULTRA				14u
 //====================只读32位的地址===================
 #define ACC_X					0u
 #define ACC_Y					1u
@@ -143,13 +143,14 @@ class Sensor
 		
 		bool Update(void);
 		void MPU_AccGyro_Calib(bool tempin);
-	void MPU_AccTempGyro_Read(void);
+	
 		Vector3 Get_RawAcc(void);
 		Vector3 Get_Acc(void);
 
 		Vector3 Get_RawGyro(void);
 		Vector3 Get_Gyro(void);
 	
+		Vector3 Get_RawMag(void);
 		float Get_IMUTemp(void);
 	
 		
@@ -168,25 +169,32 @@ class Sensor
 		s8  Get_RawDy(void);
 		float Get_Dx(void);
 		float Get_Dy(void);
-		
+		void MPU_AccTempGyro_Read(void);
+		void MPU_Mag_Read(void);
+		void MS5611_Press_Read(void);
 	private:
 		 
-		 void MPU_Mag_Read(void);
-		 void MS5611_Press_Read(void);
-		 void SR04_Alt_Read(void);
-		 void ADNS_Read(void);
-		 u8 sens_sta;
-		 s16 acc_raw[3];
-		 s16 gyro_raw[3];
-		 s16 mag_raw[3];
-		 s16 imu_temp;
-		 float press;
-		 float alt_abs;
-		 u16 alt_rela;
-		 Vector3 acc;
-		 Vector3 gyro;
-		 Vector3 mag;
-		 OPTFLW optflw;
+		 
+		void SR04_Alt_Read(void);
+		void ADNS_Read(void);
+		u8 sens_sta;
+		s16 acc_raw[3];
+		s16 gyro_raw[3];
+		s16 mag_raw[3];
+		s16 imu_temp;
+		float press;
+		float alt_abs;
+		u16 alt_rela;
+		Vector3 acc;
+		Vector3 gyro;
+		Vector3 mag;
+		OPTFLW optflw;
+		long long mpu_timesp;			//64位
+		long long mag_timesp;
+		long long adns_timesp;
+		long long press_timesp;
+		long long ultrs_timesp;
+		 
 		
 		
 };

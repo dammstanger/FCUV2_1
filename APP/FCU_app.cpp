@@ -110,13 +110,19 @@ void Task_LED(void *p_arg)
 	while(1)
 	{
 		t.normalize();
-		sensor.MPU_AccTempGyro_Read();
-		Vector3 acc_r = sensor.Get_RawGyro();
+//		sensor.MPU_AccTempGyro_Read();
+//		sensor.MPU_Mag_Read();
+//		sensor.MS5611_Press_Read();
+//		sensor.Update();
+		OPTFLW opt = sensor.Get_Optflw_Raw();
+		Vector3 acc_r = sensor.Get_RawMag();
 		float imu_tmp = sensor.Get_IMUTemp();
-		if(pwm==1000)	
+		float press = sensor.Get_AbsAlt();
+		u16 alt = (u16)sensor.Get_RelaAlt_mm();
+		if(pwm==1000)
 			pwm = 0;
 		else pwm++;
-		fsmc.Write16b(2,1000+pwm);
+		fsmc.Write16b(REG_PWM1,1000+pwm);
 		fsmc.Write16b(3,1000+pwm);
 		fsmc.Write16b(4,1000+pwm);
 		fsmc.Write16b(5,1000+pwm);
@@ -124,15 +130,18 @@ void Task_LED(void *p_arg)
 		fsmc.Write16b(7,1000+pwm);
 		fsmc.Write16b(8,1000+pwm);
 		fsmc.Write16b(9,1000+pwm);	
-		OS_CRITICAL_ENTER();	//进入临界区
-		printf("imu_tmp: %.4f\r\n",imu_tmp);
+		OS_CRITICAL_ENTER();									//进入临界区
+		Debug_log("opt:%d,%d,%x,%x.\r\n",opt.dx,opt.dy,opt.motion,opt.quality);
+		Debug_log("alt:%d mm.\r\n",alt);
+		Debug_log("imu_tmp: %.4f\r\n",imu_tmp);
 		u16 acc_i[3] = {(u16)acc_r[0],(u16)acc_r[1],(u16)acc_r[2]};
-		printf("acc raw: %.2f,%.2f,%.2f\r\n",acc_r[0],acc_r[1],acc_r[2]);
-		OS_CRITICAL_EXIT();		//退出临界区
+		Debug_log("acc raw: %.2f,%.2f,%.2f\r\n",acc_r[0],acc_r[1],acc_r[2]);
+		Debug_log("press: %f\r\n",press);
+		OS_CRITICAL_EXIT();										//退出临界区
 		LED2=0;
-		OSTimeDlyHMSM(0,0,0,200,OS_OPT_TIME_HMSM_STRICT,&err); //延时200ms
+		OSTimeDlyHMSM(0,0,0,200,OS_OPT_TIME_HMSM_STRICT,&err); 	//延时200ms
 		LED2=1;
-		OSTimeDlyHMSM(0,0,0,500,OS_OPT_TIME_HMSM_STRICT,&err); //延时500ms
+		OSTimeDlyHMSM(0,0,0,500,OS_OPT_TIME_HMSM_STRICT,&err); 	//延时500ms
 	}
 }
 
@@ -142,10 +151,8 @@ void Task_LED(void *p_arg)
 void Task_SENSOR_PRO(void *p_arg)
 {
 	OS_ERR err;
-	CPU_SR_ALLOC();
-//	
-////	CPU_TS TsOfPost;
-//	OS_ERR err;
+
+//	CPU_TS TsOfPost;
 //	
 //	while(1)
 //	{
@@ -176,13 +183,7 @@ void Task_SENSOR_PRO(void *p_arg)
 		m1+=m2;
 		q1.normalize();
 		float_num+=0.01f;
-//		OS_CRITICAL_ENTER();	//进入临界区
 		LED1=~LED1;
-//		printf("float_num的值为: %.4f\r\n",float_num);
-//		printf("q1: %.4f\r\n",q1[0]);
-//		printf("m1: %.4f,%.4f,%.4f\r\n",m1(0,1),m1(1,1),m1(2,1));
-//		OS_CRITICAL_EXIT();		//退出临界区
-		
 		OSTimeDlyHMSM(0,0,1,0,OS_OPT_TIME_HMSM_STRICT,&err); //延时1s
 	}
 }

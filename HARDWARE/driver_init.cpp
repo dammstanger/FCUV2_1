@@ -27,7 +27,7 @@ void  Driver_Init (void)
 	fsmc.Init();
 	
 	//开启外部中断
-//	EXTIX_Init();
+	EXTIX_Init();
 
 }
 

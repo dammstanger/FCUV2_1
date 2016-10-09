@@ -23,6 +23,7 @@
 
 #include "usart.h"
 #include "string.h"
+#include "stdio.h"
 
 
 #define FCU_DEBUG		//开启调试
@@ -30,9 +31,10 @@
 /****************************宏定义*********************************************/
 
 #ifdef FCU_DEBUG
-static char debug_buf[128];		//加一个static即可在内部使用
+//static char debug_buf[128];		//加一个static即可在内部使用
 
-#define Debug_log(format, args...) do{sprintf (debug_buf, format, ##args); USART1_Sendstr("DEBUG:\t");USART1_Sendstr(debug_buf);USART1_Sendstr("\r\n");}while(0);// 
+//#define Debug_log(format, args...) do{sprintf (debug_buf, format, ##args); USART1_Sendstr("DEBUG:\t");USART1_Sendstr(debug_buf);USART1_Sendstr("\r\n");}while(0);// 
+#define Debug_log(format, args...) do{USART1_Sendstr("DEBUG:\t");printf(format, ##args);USART1_Sendstr("\r\n");}while(0);
 #else
 #define Debug_log(...) do{}while(0);
 #endif

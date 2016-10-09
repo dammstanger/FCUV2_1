@@ -423,6 +423,16 @@
               <FileType>8</FileType>
               <FilePath>.\main.cpp</FilePath>
             </File>
+            <File>
+              <FileName>debug.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\debug.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>debug.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\debug.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -484,14 +494,14 @@
               <FilePath>..\HARDWARE\FSMC.cpp</FilePath>
             </File>
             <File>
-              <FileName>exti.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\exti.c</FilePath>
-            </File>
-            <File>
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>exti.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\HARDWARE\exti.cpp</FilePath>
             </File>
           </Files>
         </Group>
