@@ -19,6 +19,7 @@
 /****************************包含头文件*******************************************/
 #include "exti.h"
 #include "Sensor.h"
+#include "switch.h"
 
 #if SYSTEM_SUPPORT_UCOS
 #include "os.h"					//ucos 使用	  
@@ -42,16 +43,29 @@ extern OS_SEM g_sem_sensor_rdy;
 //外部中断1服务程序
 void EXTI1_IRQHandler(void)
 {	 
-//	OS_ERR err;	
+	OS_ERR err;	
+	static bool flg=false;
+	u8 sensta ;
 	
 	OSIntEnter();    
-    sensor.Update();
-//	if(sensor.Update())
-//	{
-//		OSSemPost ((OS_SEM  *)&g_sem_sensor_rdy,
-//				   (OS_OPT   )OS_OPT_POST_ALL,
-//				   (OS_ERR  *)&err);
-//	}
+	
+	if(flg==true)
+	{
+		flg = false;
+		SW1 = 0;
+	}
+	else{
+		flg = true;
+		SW1 = 1;
+	}
+	
+    sensta = sensor.Update();
+	if(sensta&IMU_RDY)
+	{
+		OSSemPost ((OS_SEM  *)&g_sem_sensor_rdy,
+				   (OS_OPT   )OS_OPT_POST_ALL,
+				   (OS_ERR  *)&err);
+	}
 	EXTI_ClearITPendingBit(EXTI_Line1);//清除LINE1上的中断标志位 
 	
 	OSIntExit();  	

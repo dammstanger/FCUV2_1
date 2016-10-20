@@ -226,11 +226,11 @@ s8 Sensor::Get_RawDy(void)
 }
 
 
-bool Sensor::Update(void)
+u8 Sensor::Update(void)
 {
 	sens_sta = fsmc.Read16b(REG_STA);
 	
-	if(sens_sta&MIU_RDY)
+	if(sens_sta&IMU_RDY)
 	{
 		MPU_AccTempGyro_Read();
 	}
@@ -250,10 +250,7 @@ bool Sensor::Update(void)
 	{
 		MS5611_Press_Read();
 	}
-	if(sens_sta>0)
-		return true;
-	else
-		return false;
+	return sens_sta;
 }
 
 

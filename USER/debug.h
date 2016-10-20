@@ -24,21 +24,40 @@
 #include "usart.h"
 #include "string.h"
 #include "stdio.h"
+#include <stdarg.h>
 
 
-#define FCU_DEBUG		//开启调试
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+#define FCU_DEBUG		2//开启调试
 
 /****************************宏定义*********************************************/
 
-#ifdef FCU_DEBUG
+#if FCU_DEBUG==1
 //static char debug_buf[128];		//加一个static即可在内部使用
 
 //#define Debug_log(format, args...) do{sprintf (debug_buf, format, ##args); USART1_Sendstr("DEBUG:\t");USART1_Sendstr(debug_buf);USART1_Sendstr("\r\n");}while(0);// 
 #define Debug_log(format, args...) do{USART1_Sendstr("DEBUG:\t");printf(format, ##args);USART1_Sendstr("\r\n");}while(0);
+#define Debug_dat(...) do{}while(0);
+	
+#elif FCU_DEBUG==2
+extern void Dbg_printf_dat(const int num,...);
+#define Debug_dat(num,args...) do{Dbg_printf_dat(num,##args);}while(0);
+#define Debug_log(...) do{}while(0);
+	
 #else
 #define Debug_log(...) do{}while(0);
+#define Debug_dat(...) do{}while(0);
+
 #endif
 
+	
+#ifdef __cplusplus
+}
+#endif
+	
 #endif
 
 /******************* (C) COPYRIGHT 2016 DammStanger *****END OF FILE************/

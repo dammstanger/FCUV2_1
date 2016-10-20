@@ -27,9 +27,9 @@
 /****************************宏定义***********************************************/
 /*
 REG_STA :    bit4				 bit3				 bit2				bit1		 bit0
-					Ultras_Rdy	Press_Rdy		OPTF_Rdy		Mag_Rdy		MIU_Rdy
+					Ultras_Rdy	Press_Rdy		OPTF_Rdy		Mag_Rdy		IMU_Rdy
 状态寄存器的各个位定义*/
-#define MIU_RDY					0x01
+#define IMU_RDY					0x01
 #define MAG_RDY					0x02
 #define OPTF_RDY				0x04
 #define PRESS_RDY				0x08
@@ -141,7 +141,7 @@ class Sensor
 		}
 		~Sensor(){}
 		
-		bool Update(void);
+		u8 Update(void);
 		void MPU_AccGyro_Calib(bool tempin);
 	
 		Vector3 Get_RawAcc(void);

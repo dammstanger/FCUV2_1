@@ -25,7 +25,7 @@
 #include "cpp_Math.h"
 #include "Sensor.h"
 /****************************变量定义*********************************************/
-//OS_SEM g_sem_sensor_rdy;
+OS_SEM g_sem_sensor_rdy;
 
 
 
@@ -48,7 +48,7 @@ void Task_Start(void *p_arg)
 #endif	
 
 	//创建信号量
-//	OSSemCreate(&g_sem_sensor_rdy,(CPU_CHAR*)"SENS_RDY",0,&err);
+	OSSemCreate(&g_sem_sensor_rdy,(CPU_CHAR*)"SENS_RDY",0,&err);
 	//进入临界区
 	OS_CRITICAL_ENTER();	
 	//创建LED任务
@@ -115,7 +115,6 @@ void Task_LED(void *p_arg)
 //		sensor.MS5611_Press_Read();
 //		sensor.Update();
 		OPTFLW opt = sensor.Get_Optflw_Raw();
-		Vector3 acc_r = sensor.Get_RawMag();
 		float imu_tmp = sensor.Get_IMUTemp();
 		float press = sensor.Get_AbsAlt();
 		u16 alt = (u16)sensor.Get_RelaAlt_mm();
@@ -134,8 +133,7 @@ void Task_LED(void *p_arg)
 		Debug_log("opt:%d,%d,%x,%x.\r\n",opt.dx,opt.dy,opt.motion,opt.quality);
 		Debug_log("alt:%d mm.\r\n",alt);
 		Debug_log("imu_tmp: %.4f\r\n",imu_tmp);
-		u16 acc_i[3] = {(u16)acc_r[0],(u16)acc_r[1],(u16)acc_r[2]};
-		Debug_log("acc raw: %.2f,%.2f,%.2f\r\n",acc_r[0],acc_r[1],acc_r[2]);
+		
 		Debug_log("press: %f\r\n",press);
 		OS_CRITICAL_EXIT();										//退出临界区
 		LED2=0;
@@ -151,24 +149,11 @@ void Task_LED(void *p_arg)
 void Task_SENSOR_PRO(void *p_arg)
 {
 	OS_ERR err;
+	CPU_SR_ALLOC();
+	CPU_TS TsOfPost;
 
-//	CPU_TS TsOfPost;
-//	
-//	while(1)
-//	{
-////		//阻塞任务直到按键被按下！
-////		OSSemPend ((OS_SEM   *)&g_sem_sensor_rdy,
-////             (OS_TICK   )1000,                     //如果这个参数设置为0就一直等待下去
-////             (OS_OPT    )OS_OPT_PEND_BLOCKING,  //如果没有信号量可用就等待
-////             (CPU_TS   *)&TsOfPost,             //这个参数是指向存放信号量被提交、强制解除等待状态、或者信号量被删除的时间戳        
-////             (OS_ERR   *)&err);
-//		LED2=!LED2;	
-////		math::Vector3 acc=sensor.Get_RawAcc();
-////		Debug_log("dat:%d,%d,%d.\n",(int)acc[0],(int)acc[1],(int)acc[2]);
-//		OSTimeDly(50,OS_OPT_TIME_HMSM_STRICT,&err);
-//		LED3=!LED3;	
-//	}
 	static float float_num=0.01;
+	static u8 cnt = 0;
 	float dat1[][3]={1.0f,1.0f,1.0f,
 					 2.0f,2.0f,2.0f,
 					 3.0f,3.0f,3.0f};
@@ -178,13 +163,36 @@ void Task_SENSOR_PRO(void *p_arg)
 	float dat3[4]={1.0f,1.0f,1.0f,1.0f};
 	math::Matrix3 m1(dat1),m2(dat2);
 	math::Quaternion q1(dat3);
+	
 	while(1)
 	{
 		m1+=m2;
 		q1.normalize();
 		float_num+=0.01f;
-		LED1=~LED1;
-		OSTimeDlyHMSM(0,0,1,0,OS_OPT_TIME_HMSM_STRICT,&err); //延时1s
+		//阻塞任务直到按键被按下！
+		OSSemPend ((OS_SEM   *)&g_sem_sensor_rdy,
+             (OS_TICK   )10,                     //如果这个参数设置为0就一直等待下去
+             (OS_OPT    )OS_OPT_PEND_BLOCKING,  //如果没有信号量可用就等待
+             (CPU_TS   *)&TsOfPost,             //这个参数是指向存放信号量被提交、强制解除等待状态、或者信号量被删除的时间戳        
+             (OS_ERR   *)&err);
+		if(err!=OS_ERR_NONE)					//很可能超时了，由中断脚在系统初始时就为低造成的，读取传感器就可以了。
+		{
+			sensor.Update();
+		}
+		math::Vector3 acc=sensor.Get_RawAcc();
+		if(cnt>=10)
+		{
+			cnt = 0;
+			OS_CRITICAL_ENTER();									//进入临界区
+			Debug_dat(3,(int)acc[0],(int)acc[1],(int)acc[2]);
+			LED3 = !LED3;
+			OS_CRITICAL_EXIT();										//退出临界区
+		}
+		else{
+			cnt++;
+		}
+			
+//		OSTimeDlyHMSM(0,0,1,0,OS_OPT_TIME_HMSM_STRICT,&err); //延时1s
 	}
 }
 

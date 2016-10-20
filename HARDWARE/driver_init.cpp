@@ -24,6 +24,8 @@ void  Driver_Init (void)
 	uart_init(115200);		//初始化串口波特率为115200
 	
 	LED_Init();				//初始化LED
+	BEEP_GPIO_Init();		
+	Switch_GPIO_Init();
 	fsmc.Init();
 	
 	//开启外部中断
