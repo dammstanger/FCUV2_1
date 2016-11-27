@@ -77,17 +77,18 @@ REG_STA :    bit4				 bit3				 bit2				bit1		 bit0
 #define ULT_TIMESP_L			17u
 #define ULT_TIMESP_H			18u
 
-#define G							9.8065				 //9.8065m/s^2
+#define G							9.8065f				 //9.8065m/s^2
 #define MPU_ACC_2mg                ((float)0.00006103f)  // 0.00006250 g/LSB
 #define MPU_ACC_4mg                ((float)0.00012207f)  // 0.00012500 g/LSB
 #define MPU_ACC_8mg                ((float)0.00024414f)  // 0.00025000 g/LSB
 	
-#define MPU_ACC_mps2				G*MPU_ACC_8mg
 
 #define MPU_GYRO_s250dps            ((float)0.0076335f)  // 0.0087500 dps/LSB
 #define MPU_GYRO_s500dps            ((float)0.0152671f)  // 0.0175000 dps/LSB
 #define MPU_GYRO_s2000dps           ((float)0.0609756f)  // 0.0700000 dps/LSB
 
+#define MPU_ACC_mps2				G*MPU_ACC_8mg
+#define MPU_GYRO_dps				MPU_GYRO_s2000dps
 
 /***************************类型定义***********************************************/
 typedef struct {
@@ -100,6 +101,7 @@ typedef struct {
 using math::Matrix;
 using math::Vector;
 using math::Vector3;
+using math::Matrix3;
 /*
 % 加速度校准：========================================
 % 参考陈湾湾《MEMS 微型惯性测量组合的标定》六位置最小二乘法拟合
@@ -115,15 +117,19 @@ using math::Vector3;
 %所以补偿系数：标度因数和安装误差、交叉耦合系数补偿：SINS = inv(K);  零偏：acc_OFFS
 
 */
-const float Acc_OFFS[3]={0,0,0};
-const float Acc_SINS[9]={1,0,0,0,1,0,0,0,1};
+const float Acc_OFFS[3]={-57.83f,11.95,376.23};
+const float Acc_SINS[9]={0.9922f,-0.0079f,0.0013f,
+						0.0028f,0.9948f,-0.01f,
+						0.0066f,0.005f,0.9957f};
 
-const float Gyro_OFFS[3]={0,0,0};		//温度稳定时的典型值
-const float Gyro_tmp_k[3]={1,1,1};		//假设零偏受温度的影响是线性变化的，设offs=kt+b
-const float Gyro_tmp_b[3]={1,1,1};		//
+const float Gyro_OFFS[3]={13.662f,25.58f,-14.654f};		//温度稳定时的典型值
+const float Gyro_tmp_k[3]={1.0f,1.0f,1.0f};		//假设零偏受温度的影响是线性变化的，设offs=kt+b
+const float Gyro_tmp_b[3]={1.0f,1.0f,1.0f};		//
 
-const float Mag_OFFS[3]={0,0,0};
-const float Mag_SINS[9]={1,0,0,0,1,0,0,0,1};
+const float Mag_OFFS[3]={-41.3941f,195.8141f,24.1599f};
+const float Mag_SINS[9]={183.072f,5.244f,2.24f,
+							0,103.361f,0.4527,
+							0,0,128.4462f};
 
 /****************************宏定义***********************************************/
 
@@ -142,6 +148,7 @@ class Sensor
 		~Sensor(){}
 		
 		u8 Update(void);
+		u8 Get_status(void);
 		void MPU_AccGyro_Calib(bool tempin);
 	
 		Vector3 Get_RawAcc(void);
@@ -151,6 +158,7 @@ class Sensor
 		Vector3 Get_Gyro(void);
 	
 		Vector3 Get_RawMag(void);
+		Vector3 Get_MagVct(void);
 		float Get_IMUTemp(void);
 	
 		

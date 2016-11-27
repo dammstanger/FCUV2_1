@@ -37,6 +37,7 @@
 *.dSYM/
 
 #My config
+*.TMP
 *.map
 *.uvguix.DammStangerTS
 *.uvgui.DammStangerTS

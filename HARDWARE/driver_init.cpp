@@ -2,6 +2,14 @@
 
 #include "driver_init.h"
 
+#include "delay.h"
+#include "usart.h"
+#include "FSMC.h"
+#include "LED.h"
+#include "exti.h"
+#include "beep.h"
+#include "switch.h"
+#include "sdio_sdcard.h"
 
 /*
 *********************************************************************************************************
@@ -27,6 +35,14 @@ void  Driver_Init (void)
 	BEEP_GPIO_Init();		
 	Switch_GPIO_Init();
 	fsmc.Init();
+
+	//SD初始化
+	while(SD_Init())//检测不到SD卡
+	{
+		Debug_log("SD Card Error!\r\n");
+		delay_soft_nms(500);					
+		Debug_log("\r\n");
+	}
 	
 	//开启外部中断
 	EXTIX_Init();

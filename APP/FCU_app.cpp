@@ -24,10 +24,9 @@
 #include "led.h"
 #include "cpp_Math.h"
 #include "Sensor.h"
+#include "Log_data_local.h"
 /****************************变量定义*********************************************/
 OS_SEM g_sem_sensor_rdy;
-
-
 
 //  函数名：Task_Start
 //	功  能：启动任务，启动系统的各个模块。
@@ -89,6 +88,7 @@ void Task_Start(void *p_arg)
 
 
 
+
 /*  函数名：Task_LED
 	功  能：LED控制
 */
@@ -96,45 +96,40 @@ void Task_LED(void *p_arg)
 {
 	OS_ERR err;
 	CPU_SR_ALLOC();
-//		for(ts=0;ts<10;ts++)
-//		{				
-////			tmp = fsmc.Read32b(ts);
-////			USART1_Sendbyte(tmp>>8);
-////			USART1_Sendbyte(tmp);         					//向串口1发送数据
-//		}		
-	static u16 pwm=0;
-	float dat[]={1.0f,1.0f,1.0f};
-
-	math::Vector3 t(dat);
+	u8 ret;
 	
+	//启动fatfs文件系统
+//	ret = logdat.Fsys_Init(&Workspace_1,&Filestc_1);				//初始化文件系统，过载SD卡
+	if(ret==FR_OK)
+	{
+		u32 total,free;
+		logdat.Fsys_Getfree(&total,&free);
+		Debug_log("SD Total Size:%d KB\r\n",total);					//显示容量
+		Debug_log("SD Free Size:%d KB\r\n",free);					//显示容量
+		
+		char tmp[]= "125\t124\t125\r\n123.2\t124.56789\t125.1\r\n";
+		u8 len = strlen(tmp);
+		Debug_log("String length:%d \r\n",len);
+		logdat.Fsys_Logdat("IMU.txt",tmp,len);
+	}
+//	else
+//	{
+//		Debug_log("file system failed,error: %d \r\n",ret);
+//	}
+
+	
+//	static u16 pwm=0;
+	float dat[]={1.0f,2.0f,3.0f};
+	math::Vector3 t(dat);
+	float dat2[]={1.0f,1.0f,0.0f,
+					0.0f,1.0f,0.0f,
+					1.0f,0.0f,1.0f,};
+	math::Matrix3 M(dat2);
 	while(1)
 	{
-		t.normalize();
-//		sensor.MPU_AccTempGyro_Read();
-//		sensor.MPU_Mag_Read();
-//		sensor.MS5611_Press_Read();
-//		sensor.Update();
-		OPTFLW opt = sensor.Get_Optflw_Raw();
-		float imu_tmp = sensor.Get_IMUTemp();
-		float press = sensor.Get_AbsAlt();
-		u16 alt = (u16)sensor.Get_RelaAlt_mm();
-		if(pwm==1000)
-			pwm = 0;
-		else pwm++;
-		fsmc.Write16b(REG_PWM1,1000+pwm);
-		fsmc.Write16b(3,1000+pwm);
-		fsmc.Write16b(4,1000+pwm);
-		fsmc.Write16b(5,1000+pwm);
-		fsmc.Write16b(6,1000+pwm);
-		fsmc.Write16b(7,1000+pwm);
-		fsmc.Write16b(8,1000+pwm);
-		fsmc.Write16b(9,1000+pwm);	
+		Vector3 v=M*t;
 		OS_CRITICAL_ENTER();									//进入临界区
-		Debug_log("opt:%d,%d,%x,%x.\r\n",opt.dx,opt.dy,opt.motion,opt.quality);
-		Debug_log("alt:%d mm.\r\n",alt);
-		Debug_log("imu_tmp: %.4f\r\n",imu_tmp);
-		
-		Debug_log("press: %f\r\n",press);
+		Debug_log("v=%.2f,%.2f,%.2f \n\r",v[0],v[1],v[2]);
 		OS_CRITICAL_EXIT();										//退出临界区
 		LED2=0;
 		OSTimeDlyHMSM(0,0,0,200,OS_OPT_TIME_HMSM_STRICT,&err); 	//延时200ms
@@ -152,39 +147,49 @@ void Task_SENSOR_PRO(void *p_arg)
 	CPU_SR_ALLOC();
 	CPU_TS TsOfPost;
 
-	static float float_num=0.01;
 	static u8 cnt = 0;
-	float dat1[][3]={1.0f,1.0f,1.0f,
-					 2.0f,2.0f,2.0f,
-					 3.0f,3.0f,3.0f};
-	float dat2[][3]={1.0f,1.0f,1.0f,
-					 1.0f,1.0f,1.0f,
-					 1.5f,1.5f,1.5f};
-	float dat3[4]={1.0f,1.0f,1.0f,1.0f};
-	math::Matrix3 m1(dat1),m2(dat2);
-	math::Quaternion q1(dat3);
-	
+
 	while(1)
 	{
-		m1+=m2;
-		q1.normalize();
-		float_num+=0.01f;
 		//阻塞任务直到按键被按下！
 		OSSemPend ((OS_SEM   *)&g_sem_sensor_rdy,
-             (OS_TICK   )10,                     //如果这个参数设置为0就一直等待下去
-             (OS_OPT    )OS_OPT_PEND_BLOCKING,  //如果没有信号量可用就等待
-             (CPU_TS   *)&TsOfPost,             //这个参数是指向存放信号量被提交、强制解除等待状态、或者信号量被删除的时间戳        
-             (OS_ERR   *)&err);
+				 (OS_TICK   )10,                     //如果这个参数设置为0就一直等待下去
+				 (OS_OPT    )OS_OPT_PEND_BLOCKING,  //如果没有信号量可用就等待
+				 (CPU_TS   *)&TsOfPost,             //这个参数是指向存放信号量被提交、强制解除等待状态、或者信号量被删除的时间戳        
+				 (OS_ERR   *)&err);
 		if(err!=OS_ERR_NONE)					//很可能超时了，由中断脚在系统初始时就为低造成的，读取传感器就可以了。
 		{
 			sensor.Update();
 		}
-		math::Vector3 acc=sensor.Get_RawAcc();
-		if(cnt>=10)
+		
+//		math::Vector3 accraw=sensor.Get_RawAcc();
+//		accraw*=MPU_ACC_mps2;		//转换到m/s^2
+//		accraw *=100.0f;			//放大100倍
+//		math::Vector3 gyroraw=sensor.Get_RawGyro();
+//		gyroraw*=MPU_GYRO_dps;		//转换到deg/s
+//		gyroraw *=100.0f;			//放大100倍
+		math::Vector3 magraw=sensor.Get_RawGyro();
+		magraw.normalized();
+		magraw *=100.0f;			//放大100倍
+		
+		u8 sta = sensor.Get_status();
+		if(sta&IMU_RDY)
+			sensor.MPU_AccGyro_Calib(0);
+		else if(sta&MAG_RDY)
+			sensor.MPU_Mag_Calib();
+		
+//		math::Vector3 gyro=sensor.Get_Gyro();	
+//		gyro *=100.0f;
+		math::Vector3 mag=sensor.Get_MagVct();	
+		mag *=100.0f;
+		
+		if(cnt>=30)
 		{
 			cnt = 0;
 			OS_CRITICAL_ENTER();									//进入临界区
-			Debug_dat(3,(int)acc[0],(int)acc[1],(int)acc[2]);
+//			Debug_dat(6,(int)accraw[0],(int)accraw[1],(int)accraw[2],(int)acc[0],(int)acc[1],(int)acc[2]);
+//			Debug_dat(6,(int)gyroraw[0],(int)gyroraw[1],(int)gyroraw[2],(int)gyro[0],(int)gyro[1],(int)gyro[2]);
+			Debug_dat(6,(int)magraw[0],(int)magraw[1],(int)magraw[2],(int)mag[0],(int)mag[1],(int)mag[2]);
 			LED3 = !LED3;
 			OS_CRITICAL_EXIT();										//退出临界区
 		}

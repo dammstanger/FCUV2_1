@@ -26,8 +26,21 @@
 
 /****************************类对象定义*********************************************/
 Sensor sensor;
+//加速度校准系数
+const Vector3 acc_offs(Acc_OFFS);					//
+const Matrix3 M_acc_sins(Acc_SINS);				//校正综合系数阵
+//陀螺仪校准系数
+Vector3 g_offs(Gyro_tmp_k);
+//磁阻传感器校准系数
+Vector3 mag_offs(Mag_OFFS);					//
+Matrix3 M_mag_sins(Mag_SINS);			//校正综合系数阵
 
 /****************************函数声明*********************************************/
+
+u8 Sensor::Get_status(void)
+{
+	return sens_sta;
+}
 
 //=======读取MPU传感器数据======================
 void Sensor::MPU_AccTempGyro_Read(void)
@@ -54,20 +67,17 @@ void Sensor::MPU_AccGyro_Calib(bool tempin)
 	acc_r[1]=(float)acc_raw[1];
 	acc_r[2]=(float)acc_raw[2];
 	
-	Vector3 acc_offs(Acc_OFFS);					//
-	Matrix<3,3> M_acc_sins(Acc_SINS);			//校正综合系数阵
+	Vector3 acc_t = acc_r-acc_offs;//转换单位后，单位：m/s^2 
+	acc_t *=MPU_ACC_mps2;
+	acc = M_acc_sins*acc_t;			//校正后加速度矢量，单位m/s^2
 	
-	Vector3 acc_t = acc_r*MPU_ACC_mps2-acc_offs;//转换单位后，单位：m/s^2 
-	
-	acc = M_acc_sins*acc_t;						//校正后加速度矢量，单位m/s^2
-	
-	//
+	//陀螺仪校准
 	Vector3 g_raw;
 	g_raw[0]=(float)gyro_raw[0];
 	g_raw[1]=(float)gyro_raw[1];
 	g_raw[2]=(float)gyro_raw[2];
 
-	Vector3 g_offs(Gyro_tmp_k);
+	
 	if(tempin==true)
 	{
 		g_offs.set(Gyro_tmp_k);					//是否可以
@@ -78,8 +88,9 @@ void Sensor::MPU_AccGyro_Calib(bool tempin)
 	}
 	else{										//不考虑温度
 		g_offs.set(Gyro_OFFS);					
-		gyro = g_raw - g_offs;					
+		gyro = g_raw - g_offs;	
 	}
+	gyro *=MPU_GYRO_dps;
 	
 }
 
@@ -158,13 +169,18 @@ void Sensor::MPU_Mag_Calib(void)
 	mag_r[0]=(float)mag_r[0];
 	mag_r[1]=(float)mag_r[1];
 	mag_r[2]=(float)mag_r[2];
-	Vector3 mag_offs(Mag_OFFS);					//
-	Matrix<3,3> M_acc_sins(Mag_SINS);			//校正综合系数阵
+
 	
-	Vector3 acc_t = M_acc_sins*mag_r;// + mag_offs;//校准到单位圆
+	Vector3 mag_t = M_acc_sins*mag_r + mag_offs;//校准到单位圆
 	
-	acc = acc_t.normalized();					//归一化
+	mag = mag_t;//.normalized();					//归一化
 }
+
+Vector3 Sensor::Get_MagVct(void)
+{
+	return mag;
+}
+
 
 void Sensor::MS5611_Press_Read(void)
 {

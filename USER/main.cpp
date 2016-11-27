@@ -14,7 +14,7 @@
 #include "driver_init.h"
 #include "includes.h"
 #include "FCU_app.h"
-
+#include "Log_data_local.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -28,19 +28,19 @@
 int main(void)
 {
 	OS_ERR err;	
+//	u8 ret;
+	
 	CPU_SR_ALLOC();			//存放中断的变量
 	
 	delay_init(168);  		//初始化延时函数
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
 	
-	Driver_Init();
-    
-	
+	delay_ms(2000);
 	INTX_DISABLE();		//关中断,防止滴答定时器对外设初始化的打扰
-	LED_Init();         //LED初始化
+	Driver_Init();
 	INTX_ENABLE();		//开中断
 
-	
+
 	 /* 初始化"uC/OS-III"内核 */  
 	OSInit(&err);
 	OS_CRITICAL_ENTER();//进入临界区

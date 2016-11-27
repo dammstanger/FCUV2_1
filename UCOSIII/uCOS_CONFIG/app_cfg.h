@@ -48,7 +48,7 @@
 
 #define	TASK_START_STK_SIZE                    	512u
 
-#define	TASK_LED_STK_SIZE                      	164u
+#define	TASK_LED_STK_SIZE                      	256u
 
 #define	TASK_SENSOR_PRO_STK_SIZE				200u
 /*

@@ -182,9 +182,27 @@ void delay_ms(u16 nms)
 	if(remain)delay_xms(remain);	
 }
 #endif
+
+
+//Èí¼þÑÓÊ±
+
+void delay_soft_nus(u16 us)
+{
+	u8 i;
+	for(;us>0;us--)
+	{
+		for(i=10;i>0;i--);
+	}
+}
 			 
 
-
+void delay_soft_nms(u32 ms)
+{
+	for(;ms>0;ms--)
+	{
+		delay_soft_nus(1000);
+	}
+}
 
 
 
