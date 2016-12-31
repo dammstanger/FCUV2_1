@@ -169,7 +169,18 @@ class Sensor
 	
 		
 		u16 Get_RelaAlt_mm(void);
-	
+		
+		u32 Get_IMU_Timp_ms(void);
+		long long Get_IMU_Timp_us(void);
+		u32 Get_MAG_Timp_ms(void);
+		long long Get_MAG_Timp_us(void);
+		u32 Get_ADNS_Timp_ms(void);
+		long long Get_ADNS_Timp_us(void);
+		u32 Get_MS5611_Timp_ms(void);
+		long long Get_MS5611_Timp_us(void);
+		u32 Get_SR04_Timp_ms(void);
+		long long Get_SR04_Timp_us(void);
+
 		
 		OPTFLW Get_Optflw_Raw(void);
 		u8 Get_PicQuality(void);
@@ -210,6 +221,7 @@ class Sensor
 
 
 extern Sensor sensor;
+extern u8 g_STA;
 
 #endif
 

@@ -26,25 +26,24 @@
 using namespace std;
 
 //存储类型
-#define TYPE_IMU				0x01
-#define TYPE_MAG				0x02
-#define TYPE_OPTF				0x04
-#define TYPE_PRESS				0x08
-#define TYPE_SONAR				0x10
-
-//最大缓存采集数
-#define IMU_MAX_cnt				10		//最大缓存采集数
-#define MAG_MAX_cnt				10
-#define OPTF_MAX_cnt			10
-#define PRESS_MAX_cnt			20
-#define SONAR_MAX_cnt			20
+#define LOG_IMU_RDY					0x01
+#define LOG_MAG_RDY					0x02
+#define LOG_OPTF_RDY				0x04
+#define LOG_PRESS_RDY				0x08
+#define LOG_SONAR_RDY				0x10
 
 //采样间隔数
-#define IMU_Sampintvl			2		//采样间隔数		0表示无间隔
-#define MAG_Sampintvl			2
+#define IMU_Sampintvl			10		//采样间隔数		0表示无间隔
+#define MAG_Sampintvl			0
 #define OPTF_Sampintvl			0
 #define PRESS_Sampintvl			0
 #define SONAR_Sampintvl			0
+
+//一次最大字符串长度预估
+#define STRINGLEN_MAX			112
+
+//缓存大小
+#define CACHE_SIZE				612
 /****************************变量声明*********************************************/
 
 /****************************变量定义*********************************************/
@@ -59,28 +58,43 @@ class Logdata
 		UINT br,bw;			//读写变量
 		FILINFO fileinfo;	//文件信息
 		DIR dir;  			//目录	
-		string datbuf[5];
-	
-		Logdata():IMUcnt(0),MAGcnt(0),OPTFcnt(0),PRESScnt(0),SONARcnt(0)
+		char* datbuf;		//数据缓存指针
+		u16 datbuf_used;		//缓存用量
+		u16 datbuf_valib;
+		u8 logdat_sta;
+		Logdata():datbuf_used(0),datbuf_valib(CACHE_SIZE),logdat_sta(0) //:IMUcnt(0),MAGcnt(0),OPTFcnt(0),PRESScnt(0),SONARcnt(0)
 		{
-			
+			datbuf = new char[CACHE_SIZE];
 		}
-		~Logdata(){}
+		~Logdata()
+		{
+			delete[]datbuf;
+		}
 			
 		u8 Fsys_Init(FATFS* workspace,FIL* filestc);
 			
 		u8 Fsys_Getfree(u32 *total,u32 *free);
 			
-		bool Cov_Storedat(const u8 type,...);
-			
 		u8 Fsys_Logdat(const TCHAR* path,const char* dat,u16 datlenth);
-			
+		
+		void Datbuf_IMUdataCov(int time,int ax,int ay,int az,int gx,int gy,int gz);
+		void Datbuf_OPTFdataCov(int time,int x,int y,int qual);
+		void Datbuf_MagdataCov(int time,int mx,int my,int mz);
+		void Datbuf_PrssdataCov(int time,int p);
+		void Datbuf_SonardataCov(int time,u16 h);
+		void Datbuf_SpaceChk();
+
+		void Datbuf_Store(char* dat);
+		void Datbuf_Reset();
+		
+		void GetDataRdySta(const u8 sta);
 	private:
-		u8 IMUcnt ;
-		u8 MAGcnt ;
-		u8 OPTFcnt ;
-		u8 PRESScnt ;
-		u8 SONARcnt ;
+		
+//		u8 IMUcnt ;
+//		u8 MAGcnt ;
+//		u8 OPTFcnt ;
+//		u8 PRESScnt ;
+//		u8 SONARcnt ;
 	
 };
 

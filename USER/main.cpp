@@ -35,7 +35,7 @@ int main(void)
 	delay_init(168);  		//初始化延时函数
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
 	
-	delay_ms(2000);
+	delay_ms(4000);
 	INTX_DISABLE();		//关中断,防止滴答定时器对外设初始化的打扰
 	Driver_Init();
 	INTX_ENABLE();		//开中断

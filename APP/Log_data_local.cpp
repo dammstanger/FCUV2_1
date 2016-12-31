@@ -27,8 +27,10 @@
 /****************************变量定义*********************************************/
 
 /****************************类对象定义*******************************************/
-FATFS Workspace_1;
-FIL Filestc_1;
+//在ZI-data区，不会放在Flash中，区别于RW-data
+FATFS Workspace_1;		//磁盘文件系统数据结构
+FIL Filestc_1;			//目标文件结构体
+
 Logdata logdat;
 /****************************函数声明*********************************************/
 
@@ -104,10 +106,10 @@ u8 Logdata::Fsys_Logdat(const TCHAR* path,const char* dat,u16 datlenth)
 		{
 			Debug_log("write file failed!error:%d,setnum:%d, realnum:%d.\r\n",ret,datlenth,bw);
 		}
-//		else
-//			Debug_log("write file succeed!\r\n");
+		else
+			Debug_log("write file succeed!\r\n");
 		
-file_close:ret = f_close(file);
+file_close:ret = f_close(file);			//如果没有关闭文件
 		if(ret)
 		{	
 			Debug_log("file closed failed! error:%d \r\n",ret);
@@ -119,45 +121,87 @@ file_close:ret = f_close(file);
 }
 
 
-////num:调试数据的个数，在可变参数的第一个
-////输入数据类型：int
+//数据转换
+void Logdata::Datbuf_IMUdataCov(int time,int ax,int ay,int az,int gx,int gy,int gz)
+{
+		char str[50];	
+		logdat_sta &= ~LOG_IMU_RDY;
+		sprintf(str,"%d\t%d\t%d\t%d\t%d\t%d\t%d\t",time,ax,ay,az,gx,gy,gz);
+//		Debug_log("inner: %s,%d \r\n",str,strlen(str));	
+		strcat(datbuf,str);
+}
 
-//bool Logdata::Cov_Storedat(const u8 type,...)
-//{
-//	va_list arg_ptr;
-//	u8 cnt;					
-//	
-//	
-//	va_start(arg_ptr,type);			//获取第一个参数的地址，存放于arg_ptr
-//	switch(type)
-//	{
-//		case TYPE_IMU:{
-//			int dat[7];
-//			int lenth = 29;
-//			dat[0] = va_arg(arg_ptr,int);//每次调用va_arg都会修改用对象arg_ptr，从而使该对象指向参数列表中的下一个参数
-//			dat[1] = va_arg(arg_ptr,int);
-//			dat[2] = va_arg(arg_ptr,int);
-//			dat[3] = va_arg(arg_ptr,int);
-//			dat[4] = va_arg(arg_ptr,int);
-//			dat[5] = va_arg(arg_ptr,int);
-//			dat[6] = va_arg(arg_ptr,int);
-//			
-//			string str;
-//			sprintf(str,"%d\r%d\r%d\r%d\r%d\r%d\r%d\r\n",dat[0],dat[1],dat[2],dat[3],dat[4],dat[5],dat[6]);
-//			strcat(datbuf[0],p);
-//		}
-//		break;	//
-//		case TYPE_MAG:cnt=4;break;
-//		case TYPE_OPTF:cnt=4;break;
-//		case TYPE_PRESS:
-//		case TYPE_SONAR:cnt=2;break;
-//		default:break;
-//	}
-//	
-//	
-//	return ;
-//}
 
+void Logdata::Datbuf_MagdataCov(int time,int mx,int my,int mz)
+{
+	char str[30];
+	if(logdat_sta&LOG_MAG_RDY)
+	{
+		logdat_sta &= ~LOG_MAG_RDY;
+		sprintf(str,"%d\t%d\t%d\t%d\t",time,mx,my,mz);	
+	}
+	else
+		sprintf(str,"\t\t\t\t");	
+	strcat(datbuf,str);
+}
+
+void Logdata::Datbuf_OPTFdataCov(int time,int x,int y,int qual)
+{
+	char str[30];
+	if(logdat_sta&LOG_OPTF_RDY)
+	{
+		logdat_sta &= ~LOG_OPTF_RDY;
+		sprintf(str,"%d\t%d\t%d\t%d\t",time,x,y,qual);	
+	}
+	else
+		sprintf(str,"\t\t\t\t");	
+		strcat(datbuf,str);
+}
+
+
+void Logdata::Datbuf_PrssdataCov(int time,int p)
+{
+	char str[30];
+	if(logdat_sta&LOG_PRESS_RDY)
+	{
+		logdat_sta &= ~LOG_PRESS_RDY;
+		sprintf(str,"%d\t%d\t",time,p);	
+	}
+	else
+		sprintf(str,"\t\t");	
+		strcat(datbuf,str);
+}
+
+void Logdata::Datbuf_SonardataCov(int time,u16 h)
+{
+	char str[30];
+	if(logdat_sta&LOG_SONAR_RDY)
+	{
+		logdat_sta &= ~LOG_SONAR_RDY;
+		sprintf(str,"%d\t%d\t\r\n",time,h);	
+	}
+	else
+		sprintf(str,"\t\t\r\n");	
+		strcat(datbuf,str);
+}
+
+void Logdata::Datbuf_SpaceChk()
+{
+	datbuf_used = strlen(datbuf);
+	datbuf_valib= CACHE_SIZE-datbuf_used;
+}
+
+void Logdata::Datbuf_Reset()
+{
+	datbuf[0] = NULL;			//第一个字符改为空
+	datbuf_used = 0;
+	datbuf_valib= CACHE_SIZE;
+}
+
+void Logdata::GetDataRdySta(const u8 sta)
+{
+	logdat_sta |= sta;
+}
 
 
 /******************* (C) COPYRIGHT 2016 DammStanger *****END OF FILE************/

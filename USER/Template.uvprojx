@@ -633,6 +633,11 @@
               <FileType>1</FileType>
               <FilePath>..\FATFS\src\option\ccsbcs.c</FilePath>
             </File>
+            <File>
+              <FileName>ffconf.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\FATFS\src\ffconf.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

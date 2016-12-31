@@ -23,7 +23,7 @@
 /****************************变量声明*********************************************/
 
 /****************************变量定义*********************************************/
-
+u8 g_STA=0;
 /****************************类对象定义*********************************************/
 Sensor sensor;
 //加速度校准系数
@@ -55,8 +55,8 @@ void Sensor::MPU_AccTempGyro_Read(void)
 	gyro_raw[1]=(s16)tmp[5];
 	gyro_raw[2]=(s16)tmp[6];
 	
-//	fsmc.ReadBuf32(MPU_TIMESP_L,tmp,2);
-	
+	fsmc.ReadBuf32(MPU_TIMESP_L,tmp,2);
+	mpu_timesp = ((long long)tmp[1]<<32)+tmp[0];
 }
 
 //=======读取MPU传感器数据======================
@@ -143,6 +143,9 @@ void Sensor::MPU_Mag_Read(void)
 	mag_raw[0]=(s16)tmp[0];
 	mag_raw[1]=(s16)tmp[1];
 	mag_raw[2]=(s16)tmp[2];
+	
+	fsmc.ReadBuf32(MPU_TIMESP_L,tmp,2);
+	mag_timesp = mpu_timesp;
 }
 
 Vector3 Sensor::Get_RawMag(void)
@@ -184,9 +187,11 @@ Vector3 Sensor::Get_MagVct(void)
 
 void Sensor::MS5611_Press_Read(void)
 {
+	u32 tmp[2];
+	press = fsmc.Read32b(ALT_PRESS);	
 	
-	u32 tmp = fsmc.Read32b(ALT_PRESS);
-	press = tmp/100.0f;
+	fsmc.ReadBuf32(ARP_TIMESP_L,tmp,2);
+	press_timesp = ((long long)tmp[1]<<32)+tmp[0];
 	
 }
 
@@ -197,7 +202,11 @@ float Sensor::Get_AbsAlt(void)
 
 void Sensor::SR04_Alt_Read(void)
 {
+	u32 tmp[2];
 	alt_rela = fsmc.Read16b(ALT_ULTRA);
+	
+	fsmc.ReadBuf32(ULT_TIMESP_L,tmp,2);
+	ultrs_timesp = ((long long)tmp[1]<<32)+tmp[0];
 }
 
 u16 Sensor::Get_RelaAlt_mm(void)
@@ -213,13 +222,12 @@ void Sensor::ADNS_Read(void)
 	optflw.quality = (u8)tmp[1];
 	optflw.dx = (s8)tmp[2];
 	optflw.dy = (s8)tmp[3];
+	
+	u32 tmp2[2];
+	fsmc.ReadBuf32(ADNS_TIMESP_L,tmp2,2);
+	adns_timesp = ((long long)tmp2[1]<<32)+tmp2[0];
+	
 }
-
-//
-//	void Sensor::Optflw_distcal(void)
-//	{
-//		
-//	}
 
 OPTFLW Sensor::Get_Optflw_Raw(void)
 {
@@ -241,11 +249,71 @@ s8 Sensor::Get_RawDy(void)
 	return optflw.dy;
 }
 
+//
+u32 Sensor::Get_IMU_Timp_ms(void)
+{
+	return (u32)((mpu_timesp+500)/1000);	//小数点后1位四舍五入
+}
+
+long long Sensor::Get_IMU_Timp_us(void)
+{
+	return mpu_timesp;	//小数点后1位四舍五入
+}
+
+//
+u32 Sensor::Get_MAG_Timp_ms(void)
+{
+	return (u32)((mag_timesp+500)/1000);	//小数点后1位四舍五入
+}
+
+long long Sensor::Get_MAG_Timp_us(void)
+{
+	return mag_timesp;	//小数点后1位四舍五入
+}
+
+
+//
+u32 Sensor::Get_ADNS_Timp_ms(void)
+{
+	return (u32)((adns_timesp+500)/1000);	//小数点后1位四舍五入
+}
+
+long long Sensor::Get_ADNS_Timp_us(void)
+{
+	return adns_timesp;	//小数点后1位四舍五入
+}
+
+
+//
+u32 Sensor::Get_MS5611_Timp_ms(void)
+{
+	return (u32)((press_timesp+500)/1000);	//小数点后1位四舍五入
+}
+
+
+long long Sensor::Get_MS5611_Timp_us(void)
+{
+	return press_timesp;	//小数点后1位四舍五入
+}
+
+
+//
+u32 Sensor::Get_SR04_Timp_ms(void)
+{
+	return (u32)((ultrs_timesp+500)/1000);	//小数点后1位四舍五入
+}
+
+long long Sensor::Get_SR04_Timp_us(void)
+{
+	return ultrs_timesp;	//小数点后1位四舍五入
+}
+
+
 
 u8 Sensor::Update(void)
 {
 	sens_sta = fsmc.Read16b(REG_STA);
-	
+	g_STA=sens_sta;
 	if(sens_sta&IMU_RDY)
 	{
 		MPU_AccTempGyro_Read();
