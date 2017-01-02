@@ -164,6 +164,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
+          <Name></Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -197,7 +198,7 @@
           <Type>0</Type>
           <LineNumber>226</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134240540</Address>
+          <Address>134239564</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -206,39 +207,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\FATFS\src\diskio.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>59</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134220908</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\APP\Sensor.cpp</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Template\../APP/Sensor.cpp\59</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>43</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>.\main.cpp</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\Template\../FATFS/src/diskio.c\226</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -266,6 +235,11 @@
           <count>4</count>
           <WinNumber>1</WinNumber>
           <ItemText>datbuf</ItemText>
+        </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>sensta</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

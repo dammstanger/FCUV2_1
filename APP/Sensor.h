@@ -35,6 +35,7 @@ REG_STA :    bit4				 bit3				 bit2				bit1		 bit0
 #define PRESS_RDY				0x08
 #define ULTRS_RDY				0x10
 
+#define ALL_RDY					0xff
 //====================读写16位的地址===================
 #define REG_CMD					0u
 #define REG_STA					1u				//
@@ -149,7 +150,8 @@ class Sensor
 		
 		u8 Update(void);
 		u8 Get_status(void);
-		void MPU_AccGyro_Calib(bool tempin);
+		void Clear_status(u8 flg);
+		
 	
 		Vector3 Get_RawAcc(void);
 		Vector3 Get_Acc(void);
@@ -163,7 +165,7 @@ class Sensor
 	
 		
 		void MPU_Mag_Calib(void);
-	
+		void MPU_AccGyro_Calib(bool tempin);
 		
 		float Get_AbsAlt(void);
 	
@@ -196,7 +198,7 @@ class Sensor
 		 
 		void SR04_Alt_Read(void);
 		void ADNS_Read(void);
-		u8 sens_sta;
+		u8 sens_sta;					//保存各类数自上次被处理到此次中断的时间段内是否有更新的标志
 		s16 acc_raw[3];
 		s16 gyro_raw[3];
 		s16 mag_raw[3];
@@ -221,7 +223,6 @@ class Sensor
 
 
 extern Sensor sensor;
-extern u8 g_STA;
 
 #endif
 

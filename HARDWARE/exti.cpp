@@ -37,7 +37,7 @@ void EXTI1_IRQHandler(void)
 {	 
 	OS_ERR err;	
 	static bool flg=false;
-	u8 sensta ;
+	u8 sta_1period ;
 	
 	OSIntEnter();    
 	
@@ -51,8 +51,8 @@ void EXTI1_IRQHandler(void)
 		SW1 = 1;
 	}
 	
-    sensta = sensor.Update();
-	if(sensta&IMU_RDY)
+    sta_1period = sensor.Update();
+	if(sta_1period&IMU_RDY)					   //以IMU数据周期为最小单位，IMU更新期间如有其它数据更新则先读取，不发送处理消息
 	{
 		OSSemPost ((OS_SEM  *)&g_sem_sensor_rdy,
 				   (OS_OPT   )OS_OPT_POST_ALL,

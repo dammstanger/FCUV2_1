@@ -18,12 +18,13 @@
 
 /****************************包含头文件*******************************************/
 #include "Sensor.h"
+#include "led.h"
 /****************************宏定义***********************************************/
 
 /****************************变量声明*********************************************/
 
 /****************************变量定义*********************************************/
-u8 g_STA=0;
+
 /****************************类对象定义*********************************************/
 Sensor sensor;
 //加速度校准系数
@@ -40,6 +41,11 @@ Matrix3 M_mag_sins(Mag_SINS);			//校正综合系数阵
 u8 Sensor::Get_status(void)
 {
 	return sens_sta;
+}
+
+void Sensor::Clear_status(u8 flg)
+{
+	sens_sta &=~flg; 
 }
 
 //=======读取MPU传感器数据======================
@@ -309,22 +315,23 @@ long long Sensor::Get_SR04_Timp_us(void)
 }
 
 
-
+//注意返回的是自上一次中断到此次中断时间段内更新的数据标记，不是距上次数据处理到此次中断的时间段！
 u8 Sensor::Update(void)
 {
-	sens_sta = fsmc.Read16b(REG_STA);
-	g_STA=sens_sta;
+	u8 sta_1period = fsmc.Read16b(REG_STA);
+	sens_sta |= sta_1period;		//按到达的数据类型置位，不重新赋值。这样在使用数据后需要手动复位相应位。
+	
 	if(sens_sta&IMU_RDY)
 	{
-		MPU_AccTempGyro_Read();
+		MPU_AccTempGyro_Read();	
 	}
 	if(sens_sta&MAG_RDY)
 	{
-		MPU_Mag_Read();
+		MPU_Mag_Read();	
 	}
 	if(sens_sta&OPTF_RDY)
 	{
-		ADNS_Read();
+		ADNS_Read();	
 	}
 	if(sens_sta&ULTRS_RDY)
 	{
@@ -334,7 +341,7 @@ u8 Sensor::Update(void)
 	{
 		MS5611_Press_Read();
 	}
-	return sens_sta;
+	return sta_1period;
 }
 
 

@@ -96,29 +96,7 @@ void Task_LED(void *p_arg)
 {
 	OS_ERR err;
 //	CPU_SR_ALLOC();
-//	u8 ret;
-	
-//	//启动fatfs文件系统
-//	ret = logdat.Fsys_Init(&Workspace_1,&Filestc_1);				//初始化文件系统，过载SD卡
-//	if(ret==FR_OK)
-//	{
-//		u32 total,free;
-//		logdat.Fsys_Getfree(&total,&free);
-//		Debug_log("SD Total Size:%d KB\r\n",total);					//显示容量
-//		Debug_log("SD Free Size:%d KB\r\n",free);					//显示容量
-//		
-//		char tmp[]= "125\t124\t125\r\n123.2\t124.56789\t125.1\r\n";
-//		u8 len = strlen(tmp);
-//		Debug_log("String length:%d \r\n",len);
-//		logdat.Fsys_Logdat("IMU.txt",tmp,len);
-//	}
-//	else
-//	{
-//		Debug_log("file system failed,error: %d \r\n",ret);
-//	}
 
-	
-//	static u16 pwm=0;
 	float dat[]={1.0f,2.0f,3.0f};
 	math::Vector3 t(dat);
 	float dat2[]={1.0f,1.0f,0.0f,
@@ -132,7 +110,7 @@ void Task_LED(void *p_arg)
 //		Debug_log("v=%.2f,%.2f,%.2f \n\r",v[0],v[1],v[2]);
 //		OS_CRITICAL_EXIT();										//退出临界区
 		LED2=0;
-		OSTimeDlyHMSM(0,0,0,200,OS_OPT_TIME_HMSM_STRICT,&err); 	//延时200ms
+		OSTimeDlyHMSM(0,0,0,100,OS_OPT_TIME_HMSM_STRICT,&err); 	//延时200ms
 		LED2=1;
 		OSTimeDlyHMSM(0,0,0,500,OS_OPT_TIME_HMSM_STRICT,&err); 	//延时500ms
 	}
@@ -144,11 +122,11 @@ void Task_LED(void *p_arg)
 void Task_SENSOR_PRO(void *p_arg)
 {
 	OS_ERR err;
-//	CPU_SR_ALLOC();
+	CPU_SR_ALLOC();
 	CPU_TS TsOfPost;
 
 	static u8 cnt = 0;
-	static u16 cnt1= 0;
+	static u16 cnt1 = 0;
 	static u8 sampcnt = 0;
 	
 	//启动fatfs文件系统
@@ -175,6 +153,7 @@ void Task_SENSOR_PRO(void *p_arg)
 			sensor.Update();
 			Debug_log("time out!!!\r\n");
 		}
+		else LED3 = !LED3;
 		
 		math::Vector3 accraw=sensor.Get_RawAcc();
 		accraw*=MPU_ACC_mps2;		//转换到m/s^2
@@ -190,63 +169,57 @@ void Task_SENSOR_PRO(void *p_arg)
 		int press = (int)sensor.Get_AbsAlt();
 		int dist = sensor.Get_RelaAlt_mm();
 		
-		u32 tim_imu = sensor.Get_ADNS_Timp_ms();
+		u32 tim_imu = sensor.Get_IMU_Timp_us();
 		u32 tim_mag = sensor.Get_MAG_Timp_us();
-		u32 tim_opt = sensor.Get_ADNS_Timp_ms();
-		u32 tim_prss= sensor.Get_MS5611_Timp_ms();
-		u32 tim_soner=sensor.Get_SR04_Timp_ms();
+		u32 tim_opt = sensor.Get_ADNS_Timp_us();
+		u32 tim_prss= sensor.Get_MS5611_Timp_us();
+		u32 tim_soner=sensor.Get_SR04_Timp_us();
 
 		u8 sta = sensor.Get_status();								//获取状态
-//		printf("A:%d, %d\r\n\n",g_STA,sta);
-		
+
+		sensor.Clear_status(ALL_RDY);
 		logdat.GetDataRdySta(sta);
 		if(sta&IMU_RDY)												//采样计数
 			sampcnt++;
 		
-		if(sampcnt==IMU_Sampintvl&&cnt1<500)									//所以数据的记录以IMU数据的周期*2为标准，IMU数据更新最快
-		{
-			sampcnt = 0;
-			cnt1++;
-			if(logdat.datbuf_valib<STRINGLEN_MAX)
-			{
-				Debug_log("valib:%d ,Log data!\r\n",logdat.datbuf_valib);
-				logdat.Fsys_Logdat("IMU.txt",logdat.datbuf,logdat.datbuf_used);		//录入数据
-				logdat.Datbuf_Reset();												//复位缓存
-				
-				Debug_log("after reset buf Size:%d KB\r\n",strlen(logdat.datbuf));
-			}
-			Debug_log("data ready sta:%d time:%d,%d,%d,%d,%d \r\n",logdat.logdat_sta,tim_imu,tim_mag,tim_opt,tim_prss,tim_soner);
-			//
-			logdat.Datbuf_IMUdataCov(1,(int)accraw[0],(int)accraw[1],(int)accraw[2],(int)gyroraw[0],(int)gyroraw[1],(int)gyroraw[2]);
-			
-			logdat.Datbuf_MagdataCov(2,(int)magraw[0],(int)magraw[1],(int)magraw[2]);
-			
-			logdat.Datbuf_OPTFdataCov(3,opt.dx,opt.dy,opt.quality);
-			
-			logdat.Datbuf_PrssdataCov(4,press);
-			
-			logdat.Datbuf_SonardataCov(5,dist);			//
-			
-			logdat.Datbuf_SpaceChk();								//检查缓存使用情况
-			Debug_log(" buf Size:%d.\r\n",logdat.datbuf_used);
-			LED3 = !LED3;
-		}
+//		if(sampcnt==IMU_Sampintvl&&cnt1<500)									//所以数据的记录以IMU数据的周期*2为标准，IMU数据更新最快
+//		{
+//			sampcnt = 0;
+//			cnt1++;
+//			if(logdat.datbuf_valib<STRINGLEN_MAX)
+//			{
+//				Debug_log("valib:%d ,Log data!\r\n",logdat.datbuf_valib);
+//				logdat.Fsys_Logdat("IMU.txt",logdat.datbuf,logdat.datbuf_used);		//录入数据
+//				logdat.Datbuf_Reset();												//复位缓存
+//				
+//				Debug_log("after reset buf Size:%d KB\r\n",strlen(logdat.datbuf));
+//			}
+//			
+//			//
+//			logdat.Datbuf_IMUdataCov(1,(int)accraw[0],(int)accraw[1],(int)accraw[2],(int)gyroraw[0],(int)gyroraw[1],(int)gyroraw[2]);
+//			
+//			logdat.Datbuf_MagdataCov(2,(int)magraw[0],(int)magraw[1],(int)magraw[2]);
+//			
+//			logdat.Datbuf_OPTFdataCov(3,opt.dx,opt.dy,opt.quality);
+//			
+//			logdat.Datbuf_PrssdataCov(4,press);
+//			
+//			logdat.Datbuf_SonardataCov(5,dist);			//
+//			
+//			logdat.Datbuf_SpaceChk();								//检查缓存使用情况
 
-		if(cnt>=30)
-		{
-			cnt = 0;
-			
-//			OS_CRITICAL_ENTER();									//进入临界区
-//			Debug_dat(6,(int)magraw[0],(int)magraw[1],(int)magraw[2],(int)mag[0],(int)mag[1],(int)mag[2]);
-//			LED3 = !LED3;
-//			OS_CRITICAL_EXIT();										//退出临界区
-		}
-		else{
-			cnt++;
-		}
-			
-//		OSTimeDlyHMSM(0,0,1,0,OS_OPT_TIME_HMSM_STRICT,&err); //延时1s
-	}
+//			Debug_log(" buf Size:%d.\r\n",logdat.datbuf_used);
+//		}
+
+//		if(sta&PRESS_RDY)
+//		{
+			OS_CRITICAL_ENTER();									//进入临界区
+//			Debug_dat(6,(int)sta,(int)opt.quality,(int)opt.dx,(int)opt.dy,(int)press,(int)dist);
+			Debug_dat(6,(int)sta,(int)(tim_imu/100),(int)(tim_mag/100),(int)(tim_opt/100),(int)(tim_prss/100),(int)(tim_soner/100));
+			OS_CRITICAL_EXIT();										//退出临界区
+//		}
+	}//end 
+	
 }
 
 
