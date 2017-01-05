@@ -36,9 +36,10 @@
 *                                            TASK PRIORITIES
 *********************************************************************************************************
 */
-#define  TASK_START_PRIO                          	3u
-#define  TASK_LED_PRIO                           	4u
-#define  TASK_SENSOR_PRO_PRIO						5u
+#define TASK_START_PRIO                          	3u
+#define TASK_LED_PRIO                           	30u
+#define TASK_SENSOR_PRO_PRIO						11u
+#define	TASK_DATALOG_PRIO							20u	
 /*
 *********************************************************************************************************
 *                                            TASK STACK SIZES
@@ -51,6 +52,9 @@
 #define	TASK_LED_STK_SIZE                      	256u
 
 #define	TASK_SENSOR_PRO_STK_SIZE				200u
+
+#define TASK_DATALOG_STK_SIZE					200u
+
 /*
 *********************************************************************************************************
 *                  ÄÚ´æ¾¯±¨ãÐÖµ				TASK STACK SIZES LIMIT
@@ -65,6 +69,10 @@
 
 #define  TASK_SENSOR_PRO_STK_SIZE_PCT_FULL              90u
 #define  TASK_SENSOR_PRO_STK_SIZE_LIMIT     (TASK_SENSOR_PRO_STK_SIZE      * (100u - TASK_SENSOR_PRO_STK_SIZE_PCT_FULL))     / 100u
+
+#define  TASK_DATALOG_STK_SIZE_PCT_FULL             90u
+#define  TASK_DATALOG_STK_SIZE_LIMIT     (TASK_DATALOG_STK_SIZE    * (100u - TASK_DATALOG_STK_SIZE_PCT_FULL))    / 100u
+
 
 /*
 *********************************************************************************************************

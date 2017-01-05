@@ -20,8 +20,8 @@
 #include "Log_data_local.h"
 #include "debug.h"
 #include <stdarg.h>
-
-//#include <string.h>
+#include <stdio.h>
+#include <string.h>
 /****************************变量声明*********************************************/
 
 /****************************变量定义*********************************************/
@@ -81,23 +81,42 @@ u8 Logdata::Fsys_Getfree(u32 *total,u32 *free)
 	return res;
 }	
 
-
-
-u8 Logdata::Fsys_Logdat(const TCHAR* path,const char* dat,u16 datlenth)
+//根据路径创建并打开文件，如果文件已存在，则创建新的文件，名称为指定名称加序号：如data,data1.... 不用加后缀，默认txt
+//
+u8 Logdata::Fsys_Openfile(const TCHAR* path)
 {
 	u8 ret;
-	//创建过打开文件，允许写
-	ret=f_open(file,path,FA_WRITE|FA_OPEN_ALWAYS);
-	if(ret==FR_OK)
-	{	
-//		Debug_log("succeeded open!\r\n");
-		//定位到文件结尾 如果打开文件后接在后面写，则加上这一句，否则会覆盖开始数据
-		ret = f_lseek(file,file->fsize);
-		if(ret)
+	char path_new[20];
+	u8 num = 0;
+	sprintf(path_new,"%s.txt",path);
+	
+	//创建打开文件，允许写
+	do{
+		ret = f_open(file,path_new,FA_WRITE|FA_CREATE_NEW);
+		if(ret==FR_EXIST)
 		{
-			Debug_log("file seek failed,error:%d .\r\n",ret);
-			goto file_close;
+			 Debug_log("file %s is already exist!\r\n",path_new);
+			 sprintf(path_new,"%s%d.txt",path,++num);			//在指定名称基础上附加尾号
+			if(num==0) break;									//已溢出,退出while
 		}
+	}while(ret==FR_EXIST);
+	
+	return ret;
+}
+
+
+//对文件写入数据，一定用在文件已打开的情况下，且默认对当前打开的文件写入
+u8 Logdata::Fsys_Logdat(const char* dat,u16 datlenth)
+{
+	u8 ret;
+
+//		//定位到文件结尾 如果打开文件后接在后面写，则加上这一句，否则会覆盖开始数据
+//		ret = f_lseek(file,file->fsize);
+//		if(ret)
+//		{
+//			Debug_log("file seek failed,error:%d .\r\n",ret);
+//			goto file_close;
+//		}
 		
 		//写数据
 		ret=f_write(file,dat,datlenth,&bw);		
@@ -109,20 +128,29 @@ u8 Logdata::Fsys_Logdat(const TCHAR* path,const char* dat,u16 datlenth)
 		else
 			Debug_log("write file succeed!\r\n");
 		
-file_close:ret = f_close(file);			//如果没有关闭文件
+		ret = f_sync(file);			//刷新缓存
 		if(ret)
 		{	
-			Debug_log("file closed failed! error:%d \r\n",ret);
+			Debug_log("file sync failed! error:%d \r\n",ret);
 			return ret;
 		}
-	}
-	else Debug_log("open failed error:%d \r\n",ret);
 	return ret;
 }
 
+//关闭文件
+u8 Logdata::Fsys_Closefile()
+{
+	u8 ret = f_close(file);			//关闭文件
+	if(ret)
+	{	
+		Debug_log("file closed failed! error:%d \r\n",ret);
+		return ret;
+	}
+	return ret;
+}
 
 //数据转换
-void Logdata::Datbuf_IMUdataCov(int time,int ax,int ay,int az,int gx,int gy,int gz)
+void Logdata::Datbuf_IMUdataCov(u32 time,int ax,int ay,int az,int gx,int gy,int gz)
 {
 		char str[50];	
 		logdat_sta &= ~LOG_IMU_RDY;
@@ -132,7 +160,7 @@ void Logdata::Datbuf_IMUdataCov(int time,int ax,int ay,int az,int gx,int gy,int 
 }
 
 
-void Logdata::Datbuf_MagdataCov(int time,int mx,int my,int mz)
+void Logdata::Datbuf_MagdataCov(u32 time,int mx,int my,int mz)
 {
 	char str[30];
 	if(logdat_sta&LOG_MAG_RDY)
@@ -145,7 +173,7 @@ void Logdata::Datbuf_MagdataCov(int time,int mx,int my,int mz)
 	strcat(datbuf,str);
 }
 
-void Logdata::Datbuf_OPTFdataCov(int time,int x,int y,int qual)
+void Logdata::Datbuf_OPTFdataCov(u32 time,int x,int y,int qual)
 {
 	char str[30];
 	if(logdat_sta&LOG_OPTF_RDY)
@@ -159,7 +187,7 @@ void Logdata::Datbuf_OPTFdataCov(int time,int x,int y,int qual)
 }
 
 
-void Logdata::Datbuf_PrssdataCov(int time,int p)
+void Logdata::Datbuf_PrssdataCov(u32 time,int p)
 {
 	char str[30];
 	if(logdat_sta&LOG_PRESS_RDY)
@@ -172,16 +200,16 @@ void Logdata::Datbuf_PrssdataCov(int time,int p)
 		strcat(datbuf,str);
 }
 
-void Logdata::Datbuf_SonardataCov(int time,u16 h)
+void Logdata::Datbuf_SonardataCov(u32 time,u16 h)
 {
 	char str[30];
 	if(logdat_sta&LOG_SONAR_RDY)
 	{
 		logdat_sta &= ~LOG_SONAR_RDY;
-		sprintf(str,"%d\t%d\t\r\n",time,h);	
+		sprintf(str,"%d\t%d\t\r\n",time,h);
 	}
 	else
-		sprintf(str,"\t\t\r\n");	
+		sprintf(str,"\t\t\r\n");
 		strcat(datbuf,str);
 }
 

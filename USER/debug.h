@@ -30,12 +30,15 @@
 #ifdef __cplusplus
  extern "C" {
 #endif
+	 
+#define PRF_ASCII		1u
+#define PRF_DATA		2u
 
-#define FCU_DEBUG		2//开启调试
+#define FCU_DEBUG		PRF_ASCII//开启调试
 
 /****************************宏定义*********************************************/
 //调试方式1：打印ASCII码字符串 
-#if FCU_DEBUG==1
+#if FCU_DEBUG==PRF_ASCII
 //static char debug_buf[128];		//加一个static即可在内部使用
 
 //#define Debug_log(format, args...) do{sprintf (debug_buf, format, ##args); USART1_Sendstr("DEBUG:\t");USART1_Sendstr(debug_buf);USART1_Sendstr("\r\n");}while(0);// 
@@ -43,7 +46,7 @@
 #define Debug_dat(...) do{}while(0)
 
 //调试方式2：非ASCII码数据	
-#elif FCU_DEBUG==2
+#elif FCU_DEBUG==PRF_DATA
 extern void Dbg_printf_dat(const int num,...);
 #define Debug_dat(num,args...) do{Dbg_printf_dat(num,##args);}while(0)		//打印非ASCII数据的宏
 #define Debug_log(...) do{}while(0)

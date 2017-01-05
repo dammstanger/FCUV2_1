@@ -89,6 +89,7 @@ extern  "C" {
 *
 *               (b) CPU_TS_TmrRd() MUST be configured to be greater or equal to 32-bits to avoid
 *                   truncation of TS.
+
 *********************************************************************************************************
 */
 

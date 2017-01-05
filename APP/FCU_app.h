@@ -28,10 +28,12 @@
 static  OS_TCB	LED_TCB;		   //定义任务控制块
 static  OS_TCB	START_TCB;		   
 static  OS_TCB	SENSOR_PRO_TCB;
+static  OS_TCB	DATALOG_TCB;
 
 static	CPU_STK	LED_Stk[TASK_LED_STK_SIZE];	   //定义任务堆栈		最好以8的位数
 static	CPU_STK	SENSOR_PRO_Stk[TASK_SENSOR_PRO_STK_SIZE];
 static	CPU_STK	START_Stk[TASK_START_STK_SIZE];
+static  CPU_STK Datalog_Stk[TASK_DATALOG_STK_SIZE];
 
 
 
@@ -39,7 +41,7 @@ static	CPU_STK	START_Stk[TASK_START_STK_SIZE];
 void Task_Start(void *p_arg);
 void Task_SENSOR_PRO(void *p_arg);
 void Task_LED(void *p_arg);
-
+void Task_Datalog(void *p_arg);
 
 
 #endif

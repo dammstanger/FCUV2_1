@@ -54,7 +54,7 @@ class Logdata
 {
 	public:
 		FATFS *fs;			//逻辑磁盘工作区.	 
-		FIL *file;	  		//文件1
+		FIL *file;	  		//当前文件
 		UINT br,bw;			//读写变量
 		FILINFO fileinfo;	//文件信息
 		DIR dir;  			//目录	
@@ -75,13 +75,15 @@ class Logdata
 			
 		u8 Fsys_Getfree(u32 *total,u32 *free);
 			
-		u8 Fsys_Logdat(const TCHAR* path,const char* dat,u16 datlenth);
+		u8 Fsys_Openfile(const TCHAR* path);
+		u8 Fsys_Logdat(const char* dat,u16 datlenth);
+		u8 Fsys_Closefile();
 		
-		void Datbuf_IMUdataCov(int time,int ax,int ay,int az,int gx,int gy,int gz);
-		void Datbuf_OPTFdataCov(int time,int x,int y,int qual);
-		void Datbuf_MagdataCov(int time,int mx,int my,int mz);
-		void Datbuf_PrssdataCov(int time,int p);
-		void Datbuf_SonardataCov(int time,u16 h);
+		void Datbuf_IMUdataCov(u32 time,int ax,int ay,int az,int gx,int gy,int gz);
+		void Datbuf_OPTFdataCov(u32 time,int x,int y,int qual);
+		void Datbuf_MagdataCov(u32 time,int mx,int my,int mz);
+		void Datbuf_PrssdataCov(u32 time,int p);
+		void Datbuf_SonardataCov(u32 time,u16 h);
 		void Datbuf_SpaceChk();
 
 		void Datbuf_Store(char* dat);
