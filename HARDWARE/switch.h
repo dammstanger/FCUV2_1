@@ -17,8 +17,8 @@
 	 
 #include "sys.h"
 
-#define SW1  PEout(2)	
-#define SW2  PEout(3)	
+#define SW1  GPIO_ReadInputDataBit(GPIOE,GPIO_Pin_3)
+#define SW2  GPIO_ReadInputDataBit(GPIOE,GPIO_Pin_2)
 	 
 void Switch_GPIO_Init(void);//≥ı ºªØ	
 

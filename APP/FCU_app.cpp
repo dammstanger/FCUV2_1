@@ -22,6 +22,7 @@
 #include "usart.h"
 #include "FSMC.h"
 #include "led.h"
+#include "switch.h"
 #include "cpp_Math.h"
 #include "Sensor.h"
 #include "Log_data_local.h"
@@ -184,7 +185,7 @@ void Task_SENSOR_PRO(void *p_arg)
 		if(sta&IMU_RDY)												//采样计数
 			sampcnt++;
 		
-		if(sampcnt==IMU_Sampintvl&&cnt1<500)						//所以数据的记录以IMU数据的周期*10为标准，IMU数据更新最快
+		if(sampcnt==IMU_Sampintvl)						//所以数据的记录以IMU数据的周期*10为标准，IMU数据更新最快
 		{
 			sampcnt = 0;
 			cnt1++;
@@ -211,24 +212,14 @@ void Task_Datalog(void *p_arg)
 {
 	OS_ERR err;
 	CPU_TS TsOfPost;
-	
-	static u32 tim_imu_l = 0;
-	static u32 tim_mag_l = 0;
-	static u32 tim_opt_l = 0;
-	static u32 tim_prss_l = 0;
-	static u32 tim_sonar_l = 0;
 
-	Debug_log("first log data!\r\n");
-	
-	//新建记录文件，不用加后缀，默认txt
-	u8 ret = logdat.Fsys_Openfile("IMU");				
-	if(ret) Debug_log("Creat file error:%d!\r\n",ret);
+	u8 ret;
 	
 	while(1)
 	{
 		//阻塞任务直到超时！
 		OSSemPend ((OS_SEM   *)&g_sem_datlog,
-				 (OS_TICK   )100,                     //10ms如果这个参数设置为0就一直等待下去
+				 (OS_TICK   )100,                   //10ms如果这个参数设置为0就一直等待下去
 				 (OS_OPT    )OS_OPT_PEND_BLOCKING,  //如果没有信号量可用就等待
 				 (CPU_TS   *)&TsOfPost,             //这个参数是指向存放信号量被提交、强制解除等待状态、或者信号量被删除的时间戳        
 				 (OS_ERR   *)&err);
@@ -242,64 +233,80 @@ void Task_Datalog(void *p_arg)
 			}
 		}
 		else{
-			math::Vector3 accraw=sensor.Get_RawAcc();
-	//		accraw*=MPU_ACC_mps2;		//转换到m/s^2
-	//		accraw *=100.0f;			//放大100倍
-			math::Vector3 gyroraw=sensor.Get_RawGyro();
-	//		gyroraw*=MPU_GYRO_dps;		//转换到deg/s
-	//		gyroraw *=100.0f;			//放大100倍
-			math::Vector3 magraw=sensor.Get_RawMag();
-	//		magraw.normalized();
-	//		magraw *=100.0f;			//放大100倍
-
-			OPTFLW opt=sensor.Get_Optflw_Raw();
-			int press = (int)sensor.Get_AbsAlt();
-			int dist = sensor.Get_RelaAlt_mm();
-			
-			u32 tim_imu = sensor.Get_IMU_Timp_ms();
-			u32 tim_mag = sensor.Get_MAG_Timp_ms();
-			u32 tim_opt = sensor.Get_ADNS_Timp_ms();
-			u32 tim_prss= sensor.Get_MS5611_Timp_ms();
-			u32 tim_sonar=sensor.Get_SR04_Timp_ms();
-			
-			if(logdat.datbuf_valib<STRINGLEN_MAX)							//可用缓存小于一次采集生成的数据字符串最大长度
+			if(SW1==0)
 			{
-				
-//				Debug_log("valib:%d ,Log data!\r\n",logdat.datbuf_valib);
-				
-				ret = logdat.Fsys_Logdat(logdat.datbuf,logdat.datbuf_used);					//录入数据
-				if(ret)
+				//如果当前没有文件打开，则新建
+				if(logdat.file->fs==NULL)
 				{
-					Debug_log("Log data error:%d !\r\n",ret);
+					Debug_log("first log data!\r\n");
+					//新建记录文件，不用加后缀，默认txt
+					ret = logdat.Fsys_Openfile("IMU");				
+					if(ret) Debug_log("Creat file error:%d!\r\n",ret);
 				}
-				logdat.Datbuf_Reset();										//复位缓存				
-//				Debug_log("after reset buf Size:%d KB\r\n",strlen(logdat.datbuf));
+					
+				math::Vector3 accraw=sensor.Get_RawAcc();
+		//		accraw*=MPU_ACC_mps2;		//转换到m/s^2
+		//		accraw *=100.0f;			//放大100倍
+				math::Vector3 gyroraw=sensor.Get_RawGyro();
+		//		gyroraw*=MPU_GYRO_dps;		//转换到deg/s
+		//		gyroraw *=100.0f;			//放大100倍
+				math::Vector3 magraw=sensor.Get_RawMag();
+		//		magraw.normalized();
+		//		magraw *=100.0f;			//放大100倍
+
+				OPTFLW opt=sensor.Get_Optflw_Raw();
+				int press = (int)sensor.Get_AbsAlt();
+				int dist = sensor.Get_RelaAlt_mm();
+				
+				u32 tim_imu = sensor.Get_IMU_Timp_ms();
+				u32 tim_mag = sensor.Get_MAG_Timp_ms();
+				u32 tim_opt = sensor.Get_ADNS_Timp_ms();
+				u32 tim_prss= sensor.Get_MS5611_Timp_ms();
+				u32 tim_sonar=sensor.Get_SR04_Timp_ms();
+				
+				if(logdat.datbuf_valib<STRINGLEN_MAX)							//可用缓存小于一次采集生成的数据字符串最大长度
+				{
+					
+	//				Debug_log("valib:%d ,Log data!\r\n",logdat.datbuf_valib);
+					
+					ret = logdat.Fsys_Logdat(logdat.datbuf,logdat.datbuf_used);	//录入数据
+					if(ret)
+					{
+						Debug_log("Log data error:%d !\r\n",ret);
+					}
+					logdat.Datbuf_Reset();										//复位缓存				
+	//				Debug_log("after reset buf Size:%d KB\r\n",strlen(logdat.datbuf));
+					
+				}
+				
+				//数据转成字符串存入缓存Datbuf
+				logdat.Datbuf_IMUdataCov((int)tim_imu,(int)accraw[0],(int)accraw[1],(int)accraw[2],(int)gyroraw[0],(int)gyroraw[1],(int)gyroraw[2]);
+				
+				logdat.Datbuf_MagdataCov((int)tim_mag,(int)magraw[0],(int)magraw[1],(int)magraw[2]);
+				
+				logdat.Datbuf_OPTFdataCov((int)tim_opt,opt.dx,opt.dy,opt.quality);
+				
+				logdat.Datbuf_PrssdataCov((int)tim_prss,press);
+				
+				logdat.Datbuf_SonardataCov((int)tim_sonar,dist);			//
+				
+				//检查缓存使用情况
+				logdat.Datbuf_SpaceChk();								
+
+	//			Debug_log("buf Size:%d.\r\n",logdat.datbuf_used);
+				LED3 = !LED3;	
+				Debug_log("%d. %d. %d. %d. %d\r\n",tim_imu,tim_mag,tim_opt,tim_prss,tim_sonar);
 				
 			}
-			
-			//数据转成字符串存入缓存Datbuf
-			logdat.Datbuf_IMUdataCov((int)tim_imu,(int)accraw[0],(int)accraw[1],(int)accraw[2],(int)gyroraw[0],(int)gyroraw[1],(int)gyroraw[2]);
-			
-			logdat.Datbuf_MagdataCov((int)tim_mag,(int)magraw[0],(int)magraw[1],(int)magraw[2]);
-			
-			logdat.Datbuf_OPTFdataCov((int)tim_opt,opt.dx,opt.dy,opt.quality);
-			
-			logdat.Datbuf_PrssdataCov((int)tim_prss,press);
-			
-			logdat.Datbuf_SonardataCov((int)tim_sonar,dist);			//
-			
-			//检查缓存使用情况
-			logdat.Datbuf_SpaceChk();								
+			else{
+				//如果当前文件打开，则关闭
+				if(logdat.file->fs!=NULL)
+				{
+					Debug_log("close file!!!\r\n");
+					logdat.Fsys_Closefile();	
+				}				
+			}
 
-//			Debug_log("buf Size:%d.\r\n",logdat.datbuf_used);
-			LED3 = !LED3;	
-			Debug_log("%d. %d. %d. %d. %d\r\n",tim_imu,tim_mag,tim_opt,tim_prss,tim_sonar);
-//			Debug_dat(6,(int)logdat.logdat_sta,(int)(tim_imu - tim_imu_l),(int)(tim_mag - tim_mag_l),(int)(tim_opt - tim_opt_l),(int)(tim_prss - tim_prss_l),(int)(tim_sonar - tim_sonar_l));
-			tim_imu_l = tim_imu;
-			tim_mag_l = tim_mag;
-			tim_opt_l = tim_opt;
-			tim_prss_l = tim_prss;
-			tim_sonar_l = tim_sonar;
 		}//end of else
 	}//end of while(1)
 }

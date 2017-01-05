@@ -62,6 +62,7 @@ class Logdata
 		u16 datbuf_used;		//ª∫¥Ê”√¡ø
 		u16 datbuf_valib;
 		u8 logdat_sta;
+
 		Logdata():datbuf_used(0),datbuf_valib(CACHE_SIZE),logdat_sta(0) //:IMUcnt(0),MAGcnt(0),OPTFcnt(0),PRESScnt(0),SONARcnt(0)
 		{
 			datbuf = new char[CACHE_SIZE];
